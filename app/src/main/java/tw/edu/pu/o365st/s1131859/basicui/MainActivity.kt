@@ -102,6 +102,29 @@ fun ColumnExample(modifier: Modifier = Modifier) {
         Text("作者：王義豪")
         Text(msg)
         Spacer(modifier = Modifier.height(8.dp))
+        RowExample(Modifier)
     }
 }
 
+@Composable
+fun RowExample(modifier: Modifier = Modifier) {
+    Row {
+        Image(
+            painter = painterResource(id = R.drawable.android),
+            contentDescription = "Android icon",
+            modifier = Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .background(Color.Yellow),
+            alpha = 0.6f,
+        )
+
+        Spacer(modifier = Modifier.width(20.dp))
+
+        Image(
+            painter = painterResource(id = R.drawable.compose),
+            contentDescription = "Compose icon",
+            modifier = Modifier.size(100.dp)
+        )
+    }
+}
