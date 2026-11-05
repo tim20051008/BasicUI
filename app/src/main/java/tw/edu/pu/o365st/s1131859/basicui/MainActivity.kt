@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,7 +48,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import tw.edu.pu.o365st.s1131859.basicui.ui.theme.BasicUITheme
+import androidx.compose.material3.Button
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,6 +84,7 @@ fun Main(modifier: Modifier = Modifier) {
         ColumnExample(modifier)
         TextFieldExample(modifier)
         LazyRowExample(modifier)
+        SimpleVideoPlayer(R.raw.love)
     }
 }
 
@@ -234,3 +243,79 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
         }
     }
 }
+
+@Composable
+fun SimpleVideoPlayer(
+    @RawRes videoRes: Int
+) {
+    val context = LocalContext.current
+
+    // 記錄目前播放的影片
+    var currentVideo by remember {
+        mutableStateOf(videoRes)
+    }
+
+    // 建立 ExoPlayer
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build()
+    }
+
+    // 當影片改變時，重新載入影片
+    LaunchedEffect(currentVideo) {
+
+        val uri = "android.resource://${context.packageName}/$currentVideo"
+
+        exoPlayer.setMediaItem(
+            MediaItem.fromUri(uri)
+        )
+
+        exoPlayer.prepare()
+        exoPlayer.play()
+    }
+
+    // 離開畫面時釋放播放器
+    DisposableEffect(exoPlayer) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    // 影片與按鈕的畫面
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        // 影片播放區域
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = exoPlayer
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+
+        // 切換影片按鈕
+        Button(
+            onClick = {
+                currentVideo = if (currentVideo == R.raw.love) {
+                    R.raw.handpan
+                } else {
+                    R.raw.love
+                }
+            }
+        ) {
+            Text(
+                text = if (currentVideo == R.raw.love) {
+                    "切換至 Handpan"
+                } else {
+                    "切換至 Love"
+                }
+            )
+        }
+    }
+}
+
+
